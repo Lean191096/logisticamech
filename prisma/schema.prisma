@@ -1,0 +1,51 @@
+generator client {
+  provider   = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Chofer {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  usuario       String   @unique
+  codigo_acceso String   @unique
+  rutas         Ruta[]
+}
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  direccion String
+  lat       Float
+  lng       Float
+  telefono  String?
+  pedidos   Pedido[]
+}
+
+model Pedido {
+  id          Int      @id @default(autoincrement())
+  cliente_id  Int
+  fecha       DateTime @default(now())
+  estado      String   @default("Pendiente") // Pendiente, En Ruta, Entregado, Cancelado, No Entregado
+  observacion String?
+  cliente     Cliente  @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  ruta_id     Int?
+  ruta        Ruta?    @relation(fields: [ruta_id], references: [id], onDelete: Cascade)
+}
+
+model Ruta {
+  id            Int      @id @default(autoincrement())
+  fecha         DateTime @default(now())
+  chofer_id     Int
+  orden_paradas String?  // JSON string e.g. "[1, 3, 2]" representing Pedido IDs in order
+  chofer        Chofer   @relation(fields: [chofer_id], references: [id])
+  pedidos       Pedido[]
+}
+
+model Administrador {
+  id      Int    @id @default(autoincrement())
+  usuario String @unique
+  clave   String
+}
