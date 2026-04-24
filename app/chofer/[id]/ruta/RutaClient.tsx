@@ -94,9 +94,28 @@ export default function RutaClient({ paradas, currentIndex: initialIndex, chofer
 
     if (waUrl) {
       launchUrl(waUrl); // 1. Abre WhatsApp (Nativo)
+      
+      // 2. El celular bloquea abrir dos apps a la vez si una está en segundo plano.
+      // Solución: Esperamos a que el chofer vuelva a nuestra app (cierre WhatsApp) y ahí disparamos el GPS.
+      const onFocus = () => {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+        window.removeEventListener('focus', onFocus);
+        // Pequeña pausa para que la pantalla termine de cargar y lanzamos el GPS
+        setTimeout(() => launchUrl(gpsUrl), 400);
+      };
+      
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'visible') onFocus();
+      };
+
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      window.addEventListener('focus', onFocus);
+      
+      // Limpieza de seguridad por si no vuelven
       setTimeout(() => {
-        launchUrl(gpsUrl); // 2. Abre GPS (Nativo) después de 1 segundo
-      }, 1000);
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+        window.removeEventListener('focus', onFocus);
+      }, 120000);
     } else {
       launchUrl(gpsUrl);
     }
