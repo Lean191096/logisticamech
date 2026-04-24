@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { generarRutaAction } from "@/app/actions";
 import Link from "next/link";
 import MapWrapper from "./MapWrapper";
 

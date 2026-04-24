@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, CheckCircle, Navigation, ExternalLink, XCircle } from "lucide-react";
+import { MapPin, CheckCircle, Navigation, XCircle } from "lucide-react";
 import { marcarEntregado, marcarNoEntregado } from "@/app/actions";
 
 export default function RutaClient({ paradas, currentIndex: initialIndex, choferNombre = "" }: { paradas: any[], currentIndex: number, choferNombre?: string }) {
@@ -50,35 +50,62 @@ export default function RutaClient({ paradas, currentIndex: initialIndex, chofer
     }
   }
 
-  const handleIniciarNavegacion = async (app: 'maps' | 'waze') => {
+  const handleIniciarNavegacion = (app: 'maps' | 'waze') => {
     if (!currentParada) return;
 
-    setLoading(true);
-    const { marcarEnCamino } = await import("@/app/actions");
-    await marcarEnCamino(currentParada.id);
-    setLoading(false);
+    const lat = currentParada.cliente.lat;
+    const lng = currentParada.cliente.lng;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     let gpsUrl = "";
     if (app === 'waze') {
-      gpsUrl = `https://waze.com/ul?ll=${currentParada.cliente.lat},${currentParada.cliente.lng}&navigate=yes`;
+      gpsUrl = `waze://?ll=${lat},${lng}&navigate=yes`;
     } else {
-      gpsUrl = `https://www.google.com/maps/dir/?api=1&destination=${currentParada.cliente.lat},${currentParada.cliente.lng}`;
-      if (currentIndex === 0) {
-        gpsUrl += `&origin=Colectora+Presidente+Peron+8107+Ituzaingo+Buenos+Aires`;
+      if (isIOS) {
+        gpsUrl = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`;
+      } else {
+        gpsUrl = `google.navigation:q=${lat},${lng}`;
       }
     }
 
-    // Si hay teléfono, abrimos WhatsApp en una nueva pestaña
+    let waUrl = "";
     if (phoneToUse) {
-      const num = phoneToUse.replace(/[^0-9]/g, '');
+      let num = phoneToUse.replace(/[^0-9]/g, '');
+      if (num.startsWith('0')) num = num.substring(1);
+      
+      if (num.length === 10) num = '549' + num;
+      else if (num.length === 12 && num.startsWith('54') && num[2] !== '9') num = '549' + num.substring(2);
+      else if (num.length === 11 && num.startsWith('549')) { /* Faltan digitos pero lo intentamos igual */ }
+      else if (!num.startsWith('54')) num = '549' + num;
+      
       let textoBase = `Hola ${currentParada.cliente.nombre}, ${choferNombre} de Logística Mech se encuentra en camino a su domicilio. Ante cualquier duda comuníquese de inmediato para resolver su inconveniente.`;
-
       const text = encodeURIComponent(textoBase);
-      window.open(`https://wa.me/${num}?text=${text}`, '_blank');
+      waUrl = `whatsapp://send?phone=${num}&text=${text}`;
     }
 
-    // Y automáticamente en la pestaña actual (o como intent nativo) abrimos el GPS
-    window.location.href = gpsUrl;
+    // Usar 'a.click()' evita modificar window.location y previene el error "Reload" en Next.js
+    const launchUrl = (url: string) => {
+      const a = document.createElement('a');
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+
+    if (waUrl) {
+      launchUrl(waUrl); // 1. Abre WhatsApp (Nativo)
+      setTimeout(() => {
+        launchUrl(gpsUrl); // 2. Abre GPS (Nativo) después de 1 segundo
+      }, 1000);
+    } else {
+      launchUrl(gpsUrl);
+    }
+
+    // Background task
+    setLoading(true);
+    import("@/app/actions").then(({ marcarEnCamino }) => {
+      marcarEnCamino(currentParada.id).finally(() => setLoading(false));
+    }).catch(() => setLoading(false));
   };
 
   return (
@@ -148,7 +175,7 @@ export default function RutaClient({ paradas, currentIndex: initialIndex, chofer
               />
               {!observacion.trim() && (
                 <small style={{ color: 'var(--danger)', display: 'block', marginTop: '0.35rem', fontWeight: 600 }}>
-                  * Obligatorio para marcar como "No Entregado"
+                  * Obligatorio para marcar como &quot;No Entregado&quot;
                 </small>
               )}
             </div>

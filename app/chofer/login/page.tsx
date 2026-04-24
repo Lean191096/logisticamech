@@ -3,8 +3,8 @@ import { loginChofer } from "@/app/actions";
 
 export default function ChoferLogin() {
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
-      <div className="card text-center" style={{ maxWidth: '350px', width: '100%' }}>
+    <div className="flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: '#ffffff', padding: '1rem' }}>
+      <div style={{ maxWidth: '350px', width: '100%', padding: '2.5rem 1.5rem', border: '1px solid #eaeaea', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', textAlign: 'center' }}>
         <img 
           src="https://mech.com.ar/wp-content/uploads/2021/09/LOGO-PNG.png" 
           alt="Mech Logística Logo" 

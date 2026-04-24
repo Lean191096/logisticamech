@@ -10,6 +10,7 @@ export default async function ChoferRutaPage({ params }: { params: Promise<{ id:
     where: { chofer: { id: choferId } },
     orderBy: { fecha: "desc" },
     include: {
+      chofer: true,
       pedidos: {
         include: { cliente: true }
       }
