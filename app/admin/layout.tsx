@@ -22,28 +22,24 @@ export default function AdminLayout({
   return (
     <div className="flex flex-col md:flex-row" style={{ height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
       
-      {/* Botón flotante para móviles */}
+      {/* Botón flotante para móviles (solo visible en móviles) */}
       <button 
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50, background: 'var(--card)', border: '1px solid var(--border)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}
-        className="mobile-menu-btn"
+        style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50, background: 'var(--card)', border: '1px solid var(--border)', padding: '0.5rem', borderRadius: '8px' }}
+        className="flex md:hidden"
       >
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar */}
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`} style={{ 
+      {/* Sidebar: Absoluto en móvil (animado), Relativo y siempre visible en desktop */}
+      <aside className={`admin-sidebar transition-transform duration-300 ease-in-out absolute md:relative z-40 md:z-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`} style={{ 
         width: '280px', 
         background: 'var(--card)', 
         borderRight: '1px solid var(--border)', 
         display: 'flex', 
         flexDirection: 'column', 
-        zIndex: 40, 
         boxShadow: 'var(--shadow-sm)',
-        height: '100%',
-        position: 'absolute',
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.3s ease'
+        height: '100%'
       }}>
         <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
           <img 
@@ -80,24 +76,20 @@ export default function AdminLayout({
         </div>
       </aside>
 
+      {/* Overlay oscuro para móviles cuando el sidebar está abierto */}
+      {sidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-30 bg-black/50" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
-      <main style={{ flex: 1, overflowY: 'auto', background: 'var(--background)', width: '100%' }}>
-        <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '1400px', width: '100%' }}>
+      <main style={{ flex: 1, overflowY: 'auto', background: 'var(--background)' }}>
+        <div className="container mx-auto" style={{ padding: '3rem 1.5rem', maxWidth: '1400px' }}>
           {children}
         </div>
       </main>
-
-      <style jsx global>{`
-        @media (min-width: 768px) {
-          .admin-sidebar {
-            position: relative !important;
-            transform: translateX(0) !important;
-          }
-          .mobile-menu-btn {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
