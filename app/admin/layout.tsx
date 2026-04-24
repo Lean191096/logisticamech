@@ -20,19 +20,19 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex flex-col md:flex-row" style={{ height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
+    <div className="admin-layout-container flex" style={{ height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
       
-      {/* Botón flotante para móviles (solo visible en móviles) */}
+      {/* Botón flotante para móviles */}
       <button 
         onClick={() => setSidebarOpen(!sidebarOpen)}
         style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50, background: 'var(--card)', border: '1px solid var(--border)', padding: '0.5rem', borderRadius: '8px' }}
-        className="flex md:hidden"
+        className="mobile-menu-btn flex"
       >
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar: Absoluto en móvil (animado), Relativo y siempre visible en desktop */}
-      <aside className={`admin-sidebar transition-transform duration-300 ease-in-out absolute md:relative z-40 md:z-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`} style={{ 
+      {/* Sidebar */}
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`} style={{ 
         width: '280px', 
         background: 'var(--card)', 
         borderRight: '1px solid var(--border)', 
@@ -76,20 +76,56 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Overlay oscuro para móviles cuando el sidebar está abierto */}
+      {/* Overlay oscuro para móviles */}
       {sidebarOpen && (
         <div 
-          className="md:hidden fixed inset-0 z-30 bg-black/50" 
+          className="mobile-overlay" 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 30 }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
       <main style={{ flex: 1, overflowY: 'auto', background: 'var(--background)' }}>
-        <div className="container mx-auto" style={{ padding: '3rem 1.5rem', maxWidth: '1400px' }}>
+        <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '1400px' }}>
           {children}
         </div>
       </main>
+
+      {/* CSS Seguro para Responsividad */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media (min-width: 769px) {
+          .admin-layout-container {
+            flex-direction: row !important;
+          }
+          .admin-sidebar {
+            position: relative !important;
+            transform: translateX(0) !important;
+            z-index: 10;
+          }
+          .mobile-menu-btn {
+            display: none !important;
+          }
+          .mobile-overlay {
+            display: none !important;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .admin-layout-container {
+            flex-direction: column !important;
+          }
+          .admin-sidebar {
+            position: absolute !important;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 40;
+          }
+          .admin-sidebar.closed {
+            transform: translateX(-100%) !important;
+          }
+        }
+      `}} />
     </div>
   );
 }
