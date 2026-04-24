@@ -68,11 +68,15 @@ export default function AdminLayout({
         </nav>
         
         <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)', background: 'var(--background)' }}>
-          <form action={logoutAdmin}>
-            <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-              Salir del Sistema
-            </button>
-          </form>
+          <button 
+            onClick={async () => {
+              await logoutAdmin();
+              window.location.href = "/";
+            }}
+            className="btn btn-logout" 
+            style={{ width: '100%', justifyContent: 'center' }}>
+            Salir del Sistema
+          </button>
         </div>
       </aside>
 

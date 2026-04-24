@@ -94,7 +94,7 @@ export async function cambiarClaveChofer(formData: FormData) {
 
 export async function logoutAdmin() {
   (await cookies()).delete("admin_auth");
-  redirect("/");
+  return { success: true };
 }
 
 export async function marcarEntregado(pedidoId: number, observacion?: string, nextPedidoId?: number) {
