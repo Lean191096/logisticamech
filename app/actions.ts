@@ -41,6 +41,20 @@ export async function loginAdmin(formData: FormData) {
       });
     }
   }
+
+  const marianoExists = adminsDb.some(a => a.usuario.toLowerCase() === "mariano");
+  if (!marianoExists) {
+    await prisma.administrador.create({
+      data: { usuario: "Mariano", clave: "123456" }
+    });
+  }
+
+  const juanPabloExists = adminsDb.some(a => a.usuario.toLowerCase() === "juanpablo");
+  if (!juanPabloExists) {
+    await prisma.administrador.create({
+      data: { usuario: "JuanPablo", clave: "123456" }
+    });
+  }
   
   const admins = await prisma.administrador.findMany();
   const attemptAdmin = admins.find(a => a.usuario.toLowerCase() === usuario.toLowerCase());
@@ -51,6 +65,16 @@ export async function loginAdmin(formData: FormData) {
       httpOnly: true,
       maxAge: 60 * 60 * 24 * 7 // 1 semana
     });
+
+    if ((attemptAdmin.usuario.toLowerCase() === "mariano" || attemptAdmin.usuario.toLowerCase() === "juanpablo") && attemptAdmin.clave === "123456") {
+      (await cookies()).set("admin_must_change_password", "true", {
+        path: "/",
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 // 1 día
+      });
+      return { success: true, requirePasswordChange: true };
+    }
+
     return { success: true };
   } else {
     throw new Error("Usuario o contraseña incorrectos.");
@@ -73,6 +97,8 @@ export async function cambiarClaveAdmin(formData: FormData) {
     where: { id: admin.id },
     data: { clave: nuevaClave }
   });
+  
+  (await cookies()).delete("admin_must_change_password");
   
   revalidatePath('/admin');
   return { success: true };
@@ -297,6 +323,58 @@ export async function guardarRutaConfirmada(choferId: number, orderedClientesIds
 
   revalidatePath('/admin/rutas');
   redirect('/admin/rutas');
+}
+
+export async function eliminarRuta(rutaId: number) {
+  // Get all orders in this route
+  const pedidos = await prisma.pedido.findMany({ where: { ruta_id: rutaId } });
+  
+  // Set their ruta_id to null and estado to 'Pendiente'
+  for (const p of pedidos) {
+    await prisma.pedido.update({
+      where: { id: p.id },
+      data: { ruta_id: null, estado: 'Pendiente' }
+    });
+  }
+
+  // Delete the route
+  await prisma.ruta.delete({ where: { id: rutaId } });
+  
+  revalidatePath('/admin/rutas');
+  redirect('/admin/rutas');
+}
+
+export async function actualizarOrdenRuta(rutaId: number, ordenPedidoIds: number[]) {
+  await prisma.ruta.update({
+    where: { id: rutaId },
+    data: { orden_paradas: JSON.stringify(ordenPedidoIds) }
+  });
+  revalidatePath(`/admin/rutas/${rutaId}`);
+}
+
+export async function removerPedidoDeRuta(pedidoId: number, rutaId: number) {
+  // Set the order status back to Pendiente and clear the ruta_id
+  await prisma.pedido.update({
+    where: { id: pedidoId },
+    data: { ruta_id: null, estado: 'Pendiente' }
+  });
+
+  // Remove the pedidoId from the ruta's orden_paradas
+  const ruta = await prisma.ruta.findUnique({ where: { id: rutaId } });
+  if (ruta && ruta.orden_paradas) {
+    try {
+      const orden = JSON.parse(ruta.orden_paradas) as number[];
+      const nuevoOrden = orden.filter(id => id !== pedidoId);
+      await prisma.ruta.update({
+        where: { id: rutaId },
+        data: { orden_paradas: JSON.stringify(nuevoOrden) }
+      });
+    } catch (e) {
+      console.error("Error updating orden_paradas after removing pedido", e);
+    }
+  }
+
+  revalidatePath(`/admin/rutas/${rutaId}`);
 }
 
 export async function loginChofer(formData: FormData) {

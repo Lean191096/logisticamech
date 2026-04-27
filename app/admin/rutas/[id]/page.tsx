@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import MapWrapper from "../MapWrapper";
+import EditRouteList from "./EditRouteList";
+import DeleteRouteButton from "./DeleteRouteButton";
 
 export default async function RutaDetallePage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -51,9 +53,12 @@ export default async function RutaDetallePage(props: { params: Promise<{ id: str
           <h1 className="mb-2">Recorrido del Chofer: {ruta.chofer.nombre}</h1>
           <p style={{ color: 'var(--secondary-foreground)' }}>Fecha: {ruta.fecha.toLocaleDateString()} - Ruta #{ruta.id}</p>
         </div>
-        <Link href="/admin/rutas" className="btn btn-secondary">
-          Volver a Todas las Rutas
-        </Link>
+        <div className="flex gap-4">
+          <DeleteRouteButton rutaId={ruta.id} />
+          <Link href="/admin/rutas" className="btn btn-secondary">
+            Volver a Todas las Rutas
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -71,29 +76,7 @@ export default async function RutaDetallePage(props: { params: Promise<{ id: str
         </div>
 
         <div className="card">
-          <h3 className="mb-4">Historial y Estado de Paradas</h3>
-          <div className="flex flex-col gap-4">
-            {pedidosOrdenados.map((p, idx) => (
-              <div key={p.id} style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--background)' }}>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <strong style={{ fontSize: '1.1rem' }}>{idx + 1}. {p.cliente.nombre}</strong>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--secondary-foreground)' }}>{p.cliente.direccion}</div>
-                  </div>
-                  <span className={`badge`} style={{ 
-                    background: p.estado === 'Entregado' ? 'var(--success)' : p.estado === 'En Camino' ? 'var(--warning)' : p.estado === 'No Entregado' ? 'var(--danger)' : 'var(--secondary)'
-                  }}>
-                    {p.estado}
-                  </span>
-                </div>
-                {p.observacion && (
-                  <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: 'var(--radius)', fontSize: '0.9rem' }}>
-                    <strong>Observación del Chofer:</strong> {p.observacion}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <EditRouteList rutaId={ruta.id} pedidosIniciales={pedidosOrdenados} />
         </div>
       </div>
     </div>

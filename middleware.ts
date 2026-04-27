@@ -11,6 +11,11 @@ export function middleware(request: NextRequest) {
     if (!adminSession) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
+    
+    const mustChange = request.cookies.get('admin_must_change_password')?.value;
+    if (mustChange === 'true' && path !== '/admin/cambiar-clave-inicial') {
+      return NextResponse.redirect(new URL('/admin/cambiar-clave-inicial', request.url));
+    }
   }
 
   return NextResponse.next();

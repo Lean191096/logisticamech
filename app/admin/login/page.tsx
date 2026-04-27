@@ -19,7 +19,11 @@ export default function AdminLoginPage() {
     try {
       const res = await loginAdmin(formData);
       if (res?.success) {
-        router.push("/admin");
+        if (res.requirePasswordChange) {
+          router.push("/admin/cambiar-clave-inicial");
+        } else {
+          router.push("/admin");
+        }
       }
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión.");
