@@ -227,17 +227,33 @@ export async function crearCliente(formData: FormData) {
   // hasta que se reinicie el servidor de base de datos
   const direccionConTel = telefono ? `${direccion} (Tel: ${telefono})` : direccion;
   
-  await prisma.cliente.create({
+  const cliente = await prisma.cliente.create({
     data: { nombre, direccion: direccionConTel, lat, lng }
   });
   
+  // Automáticamente crear un pedido pendiente para este nuevo cliente
+  // para que aparezca en "ruta y seguimiento"
+  await prisma.pedido.create({
+    data: {
+      cliente_id: cliente.id,
+      estado: 'Pendiente'
+    }
+  });
+  
   revalidatePath('/admin/clientes');
+  revalidatePath('/admin/rutas');
+  revalidatePath('/admin/rutas/nueva');
   redirect('/admin/clientes');
 }
 
 export async function eliminarCliente(id: number) {
+  // Eliminar los pedidos asociados primero por seguridad
+  await prisma.pedido.deleteMany({ where: { cliente_id: id } });
   await prisma.cliente.delete({ where: { id } });
+  
   revalidatePath('/admin/clientes');
+  revalidatePath('/admin/rutas');
+  revalidatePath('/admin/rutas/nueva');
 }
 
 export async function actualizarCliente(id: number, formData: FormData) {
@@ -262,6 +278,8 @@ export async function actualizarCliente(id: number, formData: FormData) {
   });
   
   revalidatePath('/admin/clientes');
+  revalidatePath('/admin/rutas');
+  revalidatePath('/admin/rutas/nueva');
   redirect('/admin/clientes');
 }
 

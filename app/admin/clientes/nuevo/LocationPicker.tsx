@@ -175,9 +175,9 @@ export default function LocationPicker() {
       
       <div style={{ position: 'relative' }}>
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
             {/* Input Calle y Altura */}
-            <div className="relative flex-1 sm:flex-[2]">
+            <div style={{ position: 'relative', width: '100%' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--secondary-foreground)' }} />
               <input 
                 type="text" 
@@ -191,7 +191,7 @@ export default function LocationPicker() {
             </div>
             
             {/* Input Partido / Localidad */}
-            <div className="relative flex-1">
+            <div style={{ position: 'relative', width: '100%' }}>
               <input 
                 type="text" 
                 className="input" 
